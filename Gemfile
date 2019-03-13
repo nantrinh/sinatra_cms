@@ -8,3 +8,6 @@ gem 'sinatra-contrib'
 
 gem 'minitest'
 gem 'rack-test'
+
+gem 'redcarpet'
+gem 'pry'
