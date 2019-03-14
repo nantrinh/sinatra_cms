@@ -100,3 +100,15 @@ post '/create' do
   end
 end
 
+post '/:filename/delete' do
+  file_path = File.join(data_path, params[:filename])
+
+  if FileTest.exist?(file_path)
+    File.delete(file_path)
+    session[:message] = "#{params[:filename]} has been deleted."
+    redirect "/"
+  else
+    session[:message] = "#{params[:filename]} does not exist."
+    redirect "/"
+  end
+end

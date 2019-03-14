@@ -38,7 +38,7 @@ class CMSTest < Minitest::Test
     assert_includes last_response.body, "changes.txt"
   end
 
-  def test_viewing_text_document
+  def test_view_text_document
     create_document '/history.txt', 'Ruby 0.95 released'
 
     get "/history.txt"
@@ -60,7 +60,7 @@ class CMSTest < Minitest::Test
     refute_includes last_response.body, "notafile.ext does not exist"
   end
 
-  def test_viewing_markdown_document
+  def test_view_markdown_document
     create_document '/about.md', '# Ruby is...'
     get "/about.md"
     assert_equal 200, last_response.status
@@ -68,7 +68,7 @@ class CMSTest < Minitest::Test
     assert_includes last_response.body, "<h1>Ruby is...</h1>"    
   end
 
-  def test_viewing_edit_document_form
+  def test_view_edit_document_form
     create_document '/changes.txt'
 
     get '/changes.txt/edit'
@@ -77,7 +77,7 @@ class CMSTest < Minitest::Test
     assert_includes last_response.body, "</textarea>"
   end
 
-  def test_updating_document
+  def test_update_document
     create_document '/changes.txt'
 
     post '/changes.txt/edit', content: 'new content'
@@ -91,7 +91,7 @@ class CMSTest < Minitest::Test
     assert_includes last_response.body, 'new content'
   end
 
-  def test_viewing_new_file_form
+  def test_view_new_file_form
     get '/new'
     assert_equal 200, last_response.status
     assert_includes last_response.body, "<button type"
@@ -119,5 +119,17 @@ class CMSTest < Minitest::Test
     post "/create", filename: "sperlonga"
     assert_equal 422, last_response.status
     assert_includes last_response.body, "File must have either a .md or .txt extension"
+  end
+
+  def test_delete_document
+    create_document 'test.txt'
+    post '/test.txt/delete'
+    assert_equal 302, last_response.status
+
+    get last_response['Location']
+    assert_includes last_response.body, 'test.txt has been deleted'
+
+    get '/'
+    refute_includes last_response.body, 'test.txt'
   end
 end
