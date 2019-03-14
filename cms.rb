@@ -8,7 +8,13 @@ configure do
   set :session_secret, 'super secret'
 end
 
-root = File.expand_path("..", __FILE__)
+def data_path
+  if ENV["RACK_ENV"] == "test"
+    File.expand_path("../test/data", __FILE__)
+  else
+    File.expand_path("../data", __FILE__)
+  end
+end
 
 def render_markdown(text)
   markdown = Redcarpet::Markdown.new(Redcarpet::Render::HTML)
@@ -27,14 +33,15 @@ def load_file_content(path)
 end
 
 get "/" do
-  @filenames = Dir.glob(root + "/data/*").map do |path|
+  pattern = File.join(data_path, "*")
+  @filenames = Dir.glob(pattern).map do |path|
     File.basename(path)
   end
   erb :index
 end
 
 get "/:filename" do
-  file_path = root + "/data/" + params[:filename]
+  file_path = File.join(data_path, params[:filename])
 
   if FileTest.exist?(file_path)
     load_file_content(file_path)
@@ -45,7 +52,7 @@ get "/:filename" do
 end
 
 get "/:filename/edit" do
-  file_path = root + "/data/" + params[:filename]
+  file_path = File.join(data_path, params[:filename])
 
   if FileTest.exist?(file_path)
     @filename = params[:filename]
@@ -58,7 +65,7 @@ get "/:filename/edit" do
 end
 
 post "/:filename/edit" do
-  file_path = root + "/data/" + params[:filename]
+  file_path = File.join(data_path, params[:filename])
 
   if FileTest.exist?(file_path)
     File.write(file_path, params[:content])
