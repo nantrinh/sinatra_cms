@@ -1,6 +1,5 @@
 {
-  admin: secret,
-  victor: gizzard,
-  spickadee: treats,
-  fuzzywuzzy: wheatgrass
+  admin: $2a$10$IiTtUAPK2vuiDDqQIbr1bOMTrJ5nO2dDM8xiLnPFCl7nbEj/1zTR2,
+  victor: $2a$10$XvpzqcbSJdrowan9Tei12OW1T3JrkOxedYf5RH0FR.mHMUB8w2kdO,
+  spickadee: $2a$10$Y.JzvLeW8TiT2ehYL28weOaohjPUMHxOQ0kBxM3codATSGVkU6eqe,
 }

@@ -10,4 +10,5 @@ gem 'minitest'
 gem 'rack-test'
 
 gem 'redcarpet'
+gem 'bcrypt'
 gem 'pry'
