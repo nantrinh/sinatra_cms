@@ -13,6 +13,10 @@ class CMSTest < Minitest::Test
     Sinatra::Application
   end
 
+  def session
+    last_request.env['rack.session']
+  end
+
   def setup
     FileUtils.mkdir_p(data_path)
   end
@@ -36,7 +40,7 @@ class CMSTest < Minitest::Test
     assert_equal "text/html;charset=utf-8", last_response["Content-Type"]
     assert_includes last_response.body, "about.md"
     assert_includes last_response.body, "changes.txt"
-    assert_includes last_response.body, 'Sign In'
+    assert_nil session[:username]
   end
 
   def test_view_text_document
@@ -52,13 +56,7 @@ class CMSTest < Minitest::Test
   def test_document_not_found
     get "/notafile.ext"
     assert_equal 302, last_response.status
-
-    get last_response["Location"]
-    assert_equal 200, last_response.status
-    assert_includes last_response.body, "notafile.ext does not exist"
-
-    get "/"
-    refute_includes last_response.body, "notafile.ext does not exist"
+    assert_equal "notafile.ext does not exist.", session[:message]
   end
 
   def test_view_markdown_document
@@ -83,9 +81,7 @@ class CMSTest < Minitest::Test
 
     post '/changes.txt/edit', content: 'new content'
     assert_equal 302, last_response.status
-
-    get last_response['Location']
-    assert_includes last_response.body, "changes.txt has been updated."    
+    assert_equal "changes.txt has been updated.", session[:message]
 
     get '/changes.txt'
     assert_equal 200, last_response.status
@@ -102,9 +98,7 @@ class CMSTest < Minitest::Test
   def test_create_new_document
     post "/create", filename: "test.txt"
     assert_equal 302, last_response.status
-
-    get last_response["Location"]
-    assert_includes last_response.body, "test.txt has been created"
+    assert_equal "test.txt has been created.", session[:message]
 
     get "/"
     assert_includes last_response.body, "test.txt"
@@ -113,25 +107,22 @@ class CMSTest < Minitest::Test
   def test_create_new_document_without_filename
     post "/create", filename: ""
     assert_equal 422, last_response.status
-    assert_includes last_response.body, "A name is required"
+    assert_equal "A name is required", session[:message]
   end
 
   def test_create_new_document_without_filename
     post "/create", filename: "sperlonga"
     assert_equal 422, last_response.status
-    assert_includes last_response.body, "File must have either a .md or .txt extension"
-  end
+    assert_includes last_response.body, "File must have either a .md or .txt extension"  end
 
   def test_delete_document
     create_document 'test.txt'
     post '/test.txt/delete'
     assert_equal 302, last_response.status
+    assert_equal 'test.txt has been deleted.', session[:message]
 
-    get last_response['Location']
-    assert_includes last_response.body, 'test.txt has been deleted'
-
-    get '/'
-    refute_includes last_response.body, 'test.txt'
+    get '/test.txt'
+    assert_equal 302, last_response.status
   end
 
   def test_view_signin_form
@@ -144,16 +135,16 @@ class CMSTest < Minitest::Test
   def test_successful_signin
     post '/users/signin', username: 'admin', password: 'secret'
     assert_equal 302, last_response.status
+    assert_equal 'Welcome!', session[:message]
 
-    get last_response['Location']
-    assert_includes last_response.body, 'Welcome!'
+    get '/' 
     assert_includes last_response.body, 'Signed in as admin'
   end
 
   def test_failed_signin
     post '/users/signin', username: 'incorrect', password: 'combination'
     assert_equal 422, last_response.status
-    assert_includes last_response.body, 'Invalid Credentials'
+    assert_includes last_response.body, "Invalid Credentials"  
   end
 
   def test_signout
@@ -162,9 +153,9 @@ class CMSTest < Minitest::Test
 
     post '/users/signout'
     assert_equal 302, last_response.status
+    assert_equal 'You have been signed out.', session[:message]
 
-    get last_response['Location']
-    assert_includes last_response.body, 'You have been signed out.'
+    get '/'
     assert_includes last_response.body, 'Sign In'
   end
 end
