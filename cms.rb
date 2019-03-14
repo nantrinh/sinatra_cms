@@ -46,6 +46,10 @@ get '/new' do
   erb :new
 end
 
+get '/users/signin' do
+  erb :signin
+end
+
 get "/:filename" do
   file_path = File.join(data_path, params[:filename])
 
@@ -68,6 +72,24 @@ get "/:filename/edit" do
     session[:message] = "#{params[:filename]} does not exist."
     redirect "/"
   end
+end
+
+post '/users/signin' do
+  if params[:username] == 'admin' && params[:password] == 'secret'
+    session[:username] = params[:username]
+    session[:message] = 'Welcome!'
+    redirect '/'
+  else
+    status 422
+    session[:message] = 'Invalid Credentials'
+    erb :signin
+  end
+end
+
+post '/users/signout' do
+  session[:username] = nil
+  session[:message] = 'You have been signed out.'
+  redirect '/'
 end
 
 post "/:filename/edit" do
