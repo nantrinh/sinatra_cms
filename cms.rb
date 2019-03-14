@@ -2,6 +2,7 @@ require "sinatra"
 require "sinatra/reloader"
 require "tilt/erubis"
 require "redcarpet"
+require 'fileutils'
 
 configure do
   enable :sessions
@@ -37,7 +38,12 @@ get "/" do
   @filenames = Dir.glob(pattern).map do |path|
     File.basename(path)
   end
+  @filenames.select! {|filename| filename =~ /.+\.(md||txt)/}
   erb :index
+end
+
+get '/new' do
+  erb :new
 end
 
 get "/:filename" do
@@ -74,6 +80,23 @@ post "/:filename/edit" do
   else
     session[:message] = "#{params[:filename]} does not exist."
     redirect "/"
+  end
+end
+
+post '/create' do
+  filename = params[:filename].strip
+  if filename.empty? || filename == '.md' || filename == '.txt'
+    status 422
+    session[:message] = "A name is required."
+    erb :new
+  elsif !(filename =~ /.+\.(md||txt)\z/)
+    status 422
+    session[:message] = "File must have either a .md or .txt extension"
+    erb :new
+  else
+    FileUtils.touch(File.join(data_path, filename))
+    session[:message] = "#{filename} has been created."
+    redirect '/'
   end
 end
 
